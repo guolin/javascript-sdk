@@ -1,5 +1,5 @@
 import type { AuthOptions, App, AppRequest } from './app';
-import { AuthedUser, UserObject, UserObjectRef } from './user';
+import { AuthedUser, CurrentUserManager, UserObject, UserObjectRef } from './user';
 import { Query } from './query';
 import { assert } from './utils';
 import { LCObject } from './object';
@@ -8,11 +8,6 @@ type InboxType = 'default' | 'private' | string;
 
 interface StatusOptions extends Omit<AuthOptions, 'sessionToken'> {
   inboxType?: InboxType;
-}
-
-interface StatusCount {
-  total: number;
-  unread: number;
 }
 
 export class StatusQuery extends Query {
@@ -102,12 +97,8 @@ export class StatusQuery extends Query {
  * @alias Status
  */
 export class StatusClass extends StatusQuery {
-  async sendToFollowers(
-    owner: AuthedUser,
-    data: Record<string, unknown>,
-    options?: StatusOptions
-  ): Promise<LCObject> {
-    assert(owner.sessionToken, 'The owner cannot be an unauthorized user');
+  async sendToFollowers(data: Record<string, any>, options?: StatusOptions): Promise<LCObject> {
+    const user = await CurrentUserManager.mustGetAsync(this.app);
     const json = await this.app.request({
       method: 'POST',
       path: '/statuses',
@@ -116,25 +107,24 @@ export class StatusClass extends StatusQuery {
         query: {
           className: '_Follower',
           keys: 'follower',
-          where: { user: owner.toPointer() },
+          where: { user: user.toPointer() },
         },
         // The 'source' field is necessary, it used to query send box. The backend will not generate
         // 'source' automatically, so it is your responsibility.
-        data: { ...data, source: owner.toPointer() },
+        data: { ...data, source: user.toPointer() },
         inboxType: options?.inboxType,
       },
-      options: { ...options, sessionToken: owner.sessionToken },
+      options,
     });
     return LCObject.fromJSON(this.app, json, '_Status');
   }
 
   async sendToUser(
-    owner: AuthedUser,
-    target: UserObject | UserObjectRef | string,
-    data: Record<string, unknown>,
+    target: UserObjectRef | string,
+    data: Record<string, any>,
     options?: StatusOptions
   ): Promise<LCObject> {
-    assert(owner.sessionToken, 'The owner cannot be an unauthorized user');
+    const user = await CurrentUserManager.mustGetAsync(this.app);
     const targetId = typeof target === 'string' ? target : target.objectId;
     const json = await this.app.request({
       method: 'POST',
@@ -146,55 +136,51 @@ export class StatusClass extends StatusQuery {
         },
         // The 'source' field is necessary, it used to query send box. The backend will not generate
         // 'source' automatically, so it is your responsibility.
-        data: { ...data, source: owner.toPointer() },
+        data: { ...data, source: user.toPointer() },
         inboxType: options?.inboxType || 'private',
       },
-      options: { ...options, sessionToken: owner.sessionToken },
+      options,
     });
     return LCObject.fromJSON(this.app, json, '_Status');
   }
 
-  async deleteInboxStatus(
-    owner: AuthedUser,
-    messageId: number,
-    options?: StatusOptions
-  ): Promise<void> {
-    assert(owner.sessionToken, 'The owner cannot be an unauthorized user');
+  async deleteInboxStatus(messageId: number, options?: StatusOptions): Promise<void> {
+    const user = await CurrentUserManager.mustGetAsync(this.app);
     await this.app.request({
       method: 'DELETE',
       path: '/subscribe/statuses/inbox',
       query: {
-        owner: JSON.stringify(owner.toPointer()),
+        owner: JSON.stringify(user.toPointer()),
         inboxType: options?.inboxType,
         messageId,
       },
-      options: { ...options, sessionToken: owner.sessionToken },
+      options,
     });
   }
 
-  async getUnreadCount(owner: AuthedUser, options?: StatusOptions): Promise<StatusCount> {
-    assert(owner.sessionToken, 'The owner cannot be an unauthorized user');
+  async getUnreadCount(options?: StatusOptions): Promise<{ total: number; unread: number }> {
+    const user = await CurrentUserManager.mustGetAsync(this.app);
     return await this.app.request({
       method: 'GET',
       path: '/subscribe/statuses/count',
       query: {
-        owner: JSON.stringify(owner.toPointer()),
+        owner: JSON.stringify(user.toPointer()),
         inboxType: options?.inboxType,
       },
-      options: { ...options, sessionToken: owner.sessionToken },
+      options,
     });
   }
 
-  async resetUnreadCount(owner: AuthedUser, options?: StatusOptions): Promise<void> {
-    assert(owner.sessionToken, 'The owner cannot be an unauthorized user');
+  async resetUnreadCount(options?: StatusOptions): Promise<void> {
+    const user = await CurrentUserManager.mustGetAsync(this.app);
     await this.app.request({
       method: 'POST',
       path: '/subscribe/statuses/resetUnreadCount',
       query: {
-        owner: JSON.stringify(owner.toPointer()),
+        owner: JSON.stringify(user.toPointer()),
         inboxType: options?.inboxType,
       },
-      options: { ...options, sessionToken: owner.sessionToken },
+      options,
     });
   }
 }
