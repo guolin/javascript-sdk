@@ -1,4 +1,4 @@
-import 'should';
+import * as should from 'should';
 import { adapters } from '../../test-adapters';
 import { App } from '../../../src/app';
 import { AuthedUser } from '../../../src/user';
@@ -13,7 +13,7 @@ describe('App', () => {
   });
 
   describe('constructor', () => {
-    it('should set accept config', () => {
+    it('check props', () => {
       const app = new App({
         appId: 'test-app-id',
         appKey: 'test-app-key',
@@ -28,6 +28,10 @@ describe('App', () => {
       app.masterKey.should.eql('test-master-key');
       app.useMasterKey.should.true();
       app.production.should.false();
+    });
+
+    it('should throw an error when appId or appKey is empty', () => {
+      should.throws(() => new App({} as any));
     });
   });
 

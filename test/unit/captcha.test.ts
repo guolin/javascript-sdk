@@ -1,7 +1,6 @@
 import 'should';
 import { adapters } from '../test-adapters';
 import { App } from '../../src/app';
-import { API_VERSION } from '../../src/const';
 import { Captcha } from '../../src/captcha';
 
 describe('Captcha', function () {

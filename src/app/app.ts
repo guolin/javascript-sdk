@@ -1,11 +1,10 @@
 import { HTTP, HTTPRequest, RequestOptions } from '../http';
 import { getAdapters } from '../adapters';
 import { NSStorage } from './storage';
-import { KEY_CURRENT_USER } from '../const';
+import { KEY_CURRENT_USER, SDK_VERSION } from '../const';
 import { APIError } from './errors';
 import { isCNApp, Router, Service } from './router';
 import { AuthedUser } from '../user';
-import { version } from '../../package.json';
 
 export interface AuthOptions extends RequestOptions {
   sessionToken?: string;
@@ -97,7 +96,7 @@ export class App {
 
     const sessionToken = req.options?.sessionToken || (await this.getSessionTokenAsync());
 
-    let ua = 'LeanCloud-JS-SDK/' + version;
+    let ua = 'LeanCloud-JS-SDK/' + SDK_VERSION;
     const { platformInfo } = getAdapters();
     if (platformInfo) {
       const { name, version } = platformInfo;
