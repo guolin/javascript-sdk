@@ -16,7 +16,7 @@
     "url": "https://github.com/leancloud/javascript-sdk"
   },
   "scripts": {
-    "clean": "rm -rf dist live-query/dist",
+    "clean": "rm -rf dist",
     "compile": "rollup -c rollup/rollup.config.js",
     "build": "npm run clean && npm run compile",
     "doc": "typedoc --options typedoc.json",
