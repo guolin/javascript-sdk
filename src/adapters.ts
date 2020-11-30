@@ -1,18 +1,18 @@
 import { Adapters } from '@leancloud/adapter-types';
 
-let _adapters: Partial<Adapters>;
+const ADAPTERS: Partial<Adapters> = {};
 
-const onSetListeners: Array<(adapters: Partial<Adapters>) => void> = [];
+const onSetListeners: Array<(adapters: Readonly<Partial<Adapters>>) => void> = [];
 
 export function setAdapters(adapters: Partial<Adapters>): void {
-  _adapters = { ..._adapters, ...adapters };
-  onSetListeners.forEach((listener) => listener(_adapters));
+  Object.assign(ADAPTERS, adapters);
+  onSetListeners.forEach((listener) => listener(ADAPTERS));
 }
 
-export function getAdapters(): Partial<Adapters> {
-  return _adapters;
+export function getAdapters(): Readonly<Partial<Adapters>> {
+  return ADAPTERS;
 }
 
-export function onAdaptersSet(listener: (adapters: Partial<Adapters>) => void): void {
+export function onAdaptersSet(listener: (adapters: Readonly<Partial<Adapters>>) => void): void {
   onSetListeners.push(listener);
 }

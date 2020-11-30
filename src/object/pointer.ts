@@ -9,9 +9,6 @@ export function pointer({ className, objectId }: { className: string; objectId: 
 }
 
 export function ensurePointer(className: string, object: string | { objectId: string }): Pointer {
-  if (typeof object === 'string') {
-    return pointer({ className, objectId: object });
-  } else {
-    return pointer({ className, objectId: object.objectId });
-  }
+  const objectId = typeof object === 'string' ? object : object.objectId;
+  return pointer({ className, objectId });
 }
